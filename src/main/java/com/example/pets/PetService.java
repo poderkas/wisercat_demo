@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @Transactional
 public class PetService {
+
     private final PetRepository petRepository;
 
     @Autowired
@@ -19,7 +21,6 @@ public class PetService {
     }
 
     public Pet addPet(Pet pet) {
-        pet.setPetCode(UUID.randomUUID().toString());
         return petRepository.save(pet);
     }
 
@@ -27,13 +28,15 @@ public class PetService {
         return petRepository.findAll();
     }
 
-    public Pet updateEmployee(Pet pet) {
+    public Pet updatePet(Pet pet) {
+        Long id = pet.getId();
+        petRepository.deletePetById(id);
         return petRepository.save(pet);
     }
 
-    public Pet findPetById(Long id) {
+    public Pet findPetById(Long id) throws Exception {
         return petRepository.findPetById(id)
-                .orElseThrow(() -> new UserNotFoundException("User by id " + id + " was not found"));
+                .orElseThrow(() -> new Exception("shii"));
     }
 
     public void deletePet(Long id){

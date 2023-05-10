@@ -12,81 +12,44 @@ import java.util.List;
 import java.util.Optional;
 
 
-@Controller
-@RequestMapping("/")
+@RestController
+@RequestMapping("/pet")
 public class PetController {
-    @Autowired
-    PetRepository petRepository;
 
-    @GetMapping("/getAllPets")
-    public ResponseEntity<List<Pet>> getAllPets() {
-        try {
-            List<Pet> petList = new ArrayList<>();
-            petRepository.findAll().forEach(petList::add);
+    private final PetService petService;
 
-            if (petList.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(petList, HttpStatus.OK);
-        } catch(Exception ex) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public PetController(PetService petService) {
+        this.petService = petService;
     }
 
-    @GetMapping("/getPetById/{id}")
-    public ResponseEntity<Pet> getPetById(@PathVariable Long id) {
-        Optional<Pet> pet = petRepository.findById(id);
-        if (pet.isPresent()) {
-            return new ResponseEntity<>(pet.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @GetMapping("/all")
+    public ResponseEntity<List<Pet>> getAllPets () {
+        List<Pet> pets = petService.findAllPets();
+        return new ResponseEntity<>(pets, HttpStatus.OK);
     }
 
-    @PostMapping("/addPet")
+    @GetMapping("/find/{id}")
+    public ResponseEntity<Pet> getPetById (@PathVariable("id") Long id) throws Exception {
+        Pet pet = petService.findPetById(id);
+        return new ResponseEntity<>(pet, HttpStatus.OK);
+    }
+
+    @PostMapping("/add")
     public ResponseEntity<Pet> addPet(@RequestBody Pet pet) {
-        try {
-            petRepository.save(pet);
-            return new ResponseEntity<>(pet, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Pet newPet = petService.addPet(pet);
+        return new ResponseEntity<>(newPet, HttpStatus.CREATED);
     }
 
-    @PostMapping("/updatePet/{id}")
-    public ResponseEntity<Pet> updatePet(@PathVariable Long id, @RequestBody Pet pet) {
-        try {
-            Optional<Pet> petData = petRepository.findById(id);
-            if (petData.isPresent()) {
-                Pet updatedPetData = petData.get();
-
-                petRepository.save(updatedPetData);
-                return new ResponseEntity<>(pet, HttpStatus.CREATED);
-            }
-
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @PutMapping("/update")
+    public ResponseEntity<Pet> updatePet(@RequestBody Pet pet){
+        Pet updatePet = petService.updatePet(pet);
+        return new ResponseEntity<>(updatePet, HttpStatus.OK);
     }
 
-    @DeleteMapping("/deleteBookById/{id}")
-    public ResponseEntity<HttpStatus> deletePet(@PathVariable Long id) {
-        try {
-            petRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @DeleteMapping("/deleteAllPets")
-    public ResponseEntity<HttpStatus> deleteAllPets() {
-        try {
-            petRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deletePet(@PathVariable("id") Long id) {
+        petService.deletePet(id);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
+
